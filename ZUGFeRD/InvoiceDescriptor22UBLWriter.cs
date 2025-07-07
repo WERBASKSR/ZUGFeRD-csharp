@@ -937,11 +937,11 @@ namespace s2industries.ZUGFeRD
                     }
                 }
 
-                if (!string.IsNullOrWhiteSpace(party.Name))
+                if (!string.IsNullOrWhiteSpace(party.SpecifiedLegalOrganization.TradingBusinessName))
                 {
                     writer.WriteStartElement("cac", "PartyName");
                     writer.WriteStartElement("cbc", "Name");
-                    writer.WriteValue(party.Name);
+                    writer.WriteValue(party.SpecifiedLegalOrganization.TradingBusinessName);
                     writer.WriteEndElement();//!Name
                     writer.WriteEndElement();//!PartyName
                 }
