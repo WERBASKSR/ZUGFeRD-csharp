@@ -452,7 +452,7 @@ namespace s2industries.ZUGFeRD
             foreach (TradeCharge charge in descriptor.GetTradeCharges())
             {
                 _WriteDocumentLevelAllowanceCharges(Writer, charge);
-            } // !foreach(charge)            
+            } // !foreach(charge)
             #endregion
 
             // Tax Total
@@ -531,7 +531,7 @@ namespace s2industries.ZUGFeRD
 
             if ((tradeAllowanceCharge is TradeAllowance allowance) && (allowance.ReasonCode != null))
             {
-                Writer.WriteStartElement("cbc", "AllowanceChargeReasonCode"); // BT-97                
+                Writer.WriteStartElement("cbc", "AllowanceChargeReasonCode"); // BT-97
                 string s = EnumExtensions.EnumToString<AllowanceReasonCodes>(allowance.ReasonCode);
                 Writer.WriteValue(EnumExtensions.EnumToString<AllowanceReasonCodes>(allowance.ReasonCode));
                 Writer.WriteEndElement();
@@ -581,7 +581,7 @@ namespace s2industries.ZUGFeRD
             Writer.WriteEndElement(); // cac:TaxScheme
             Writer.WriteEndElement(); // cac:TaxCategory
 
-            Writer.WriteEndElement(); // !AllowanceCharge()            
+            Writer.WriteEndElement(); // !AllowanceCharge()
         } // !_WriteDocumentLevelAllowanceCharges()
 
 
@@ -653,14 +653,45 @@ namespace s2industries.ZUGFeRD
                 }
             }
 
-            foreach (var specifiedTradeAllowanceCharge in tradeLineItem.GetSpecifiedTradeAllowances())
+            foreach (var specifiedTradeAllowanceCharge in tradeLineItem.GetSpecifiedTradeAllowanceCharges())
             {
-                _WriteItemLevelSpecifiedTradeAllowanceCharge(specifiedTradeAllowanceCharge);
-            }
-            
-            foreach (var specifiedTradeAllowanceCharge in tradeLineItem.GetSpecifiedTradeCharges())
-            {
-                _WriteItemLevelSpecifiedTradeAllowanceCharge(specifiedTradeAllowanceCharge);
+                Writer.WriteStartElement("cac", "AllowanceCharge");
+                Writer.WriteElementString("cbc", "ChargeIndicator",
+                    specifiedTradeAllowanceCharge.ChargeIndicator ? "true" : "false"); // BG-28-0
+
+                if ((specifiedTradeAllowanceCharge is TradeAllowance allowance) && (allowance.ReasonCode != null))
+                {
+                    Writer.WriteOptionalElementString("cbc", "AllowanceChargeReasonCode",
+                        EnumExtensions.EnumToString(allowance.ReasonCode)); // BT-140, BT-145
+                }
+                else if ((specifiedTradeAllowanceCharge is TradeCharge charge) && (charge.ReasonCode != null))
+                {
+                    Writer.WriteOptionalElementString("cbc", "AllowanceChargeReasonCode",
+                        EnumExtensions.EnumToString(charge.ReasonCode)); // BT-140, BT-145
+                }
+
+                Writer.WriteOptionalElementString("cbc", "AllowanceChargeReason",
+                    specifiedTradeAllowanceCharge.Reason); // BT-139, BT-144
+
+                if (specifiedTradeAllowanceCharge.ChargePercentage.HasValue)
+                {
+                    Writer.WriteOptionalElementString("cbc", "MultiplierFactorNumeric",
+                        _formatDecimal(specifiedTradeAllowanceCharge.ChargePercentage));
+                }
+
+                Writer.WriteStartElement("cbc", "Amount");
+                Writer.WriteAttributeString("currencyID", this.Descriptor.Currency.EnumToString());
+                Writer.WriteValue(_formatDecimal(specifiedTradeAllowanceCharge.ActualAmount));
+                Writer.WriteEndElement(); // !Amount
+                if (specifiedTradeAllowanceCharge.BasisAmount.HasValue)
+                {
+                    Writer.WriteStartElement("cbc", "BaseAmount"); // BT-137, BT-142
+                    Writer.WriteAttributeString("currencyID", this.Descriptor.Currency.EnumToString());
+                    Writer.WriteValue(_formatDecimal(specifiedTradeAllowanceCharge.BasisAmount));
+                    Writer.WriteEndElement(); // !BaseAmount
+                }
+
+                Writer.WriteEndElement(); // !AllowanceCharge
             }
 
             Writer.WriteStartElement("cac", "Item");
@@ -731,7 +762,7 @@ namespace s2industries.ZUGFeRD
                     else
                     {
                         Writer.WriteElementString("cbc", "ChargeIndicator", "true");
-                    }                    
+                    }
 
                     Writer.WriteStartElement("cbc", "Amount"); // BT-147
                     Writer.WriteAttributeString("currencyID", this.Descriptor.Currency.EnumToString());
@@ -954,7 +985,7 @@ namespace s2industries.ZUGFeRD
                     }
                 }
 
-                if (!string.IsNullOrWhiteSpace(party.SpecifiedLegalOrganization.TradingBusinessName))
+                if (party.SpecifiedLegalOrganization != null && !string.IsNullOrWhiteSpace(party.SpecifiedLegalOrganization.TradingBusinessName))
                 {
                     writer.WriteStartElement("cac", "PartyName");
                     writer.WriteStartElement("cbc", "Name");
