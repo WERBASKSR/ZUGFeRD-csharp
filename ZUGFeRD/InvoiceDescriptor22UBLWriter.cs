@@ -653,7 +653,7 @@ namespace s2industries.ZUGFeRD
                 }
             }
 
-            foreach (var specifiedTradeAllowanceCharge in tradeLineItem.GetTradeAllowanceCharges())
+            foreach (var specifiedTradeAllowanceCharge in tradeLineItem.GetSpecifiedTradeAllowanceCharges())
             {
                 Writer.WriteStartElement("cac", "AllowanceCharge");
                 Writer.WriteElementString("cbc", "ChargeIndicator",
